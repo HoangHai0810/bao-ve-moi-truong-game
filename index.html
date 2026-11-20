@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chiến Binh Xanh — Trò Chơi Bảo Vệ Môi Trường</title>
+<meta name="description" content="Trò chơi trắc nghiệm bảo vệ môi trường: trả lời đúng để trồng cây, cứu hành tinh. Bộ câu hỏi có thể đổi, sửa, thêm mới ngay trong game.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green:#1d9e57; --green-dark:#0f6b38; --green-light:#e7f7ee;
+    --sky:#bfe8ff; --ink:#17301f; --muted:#5b7263; --card:#ffffff;
+    --wrong:#e5484d; --gold:#f5a623; --radius:20px;
+    --shadow:0 10px 30px rgba(15,80,45,.18);
+  }
+  body{
+    font-family:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
+    color:var(--ink); min-height:100vh;
+    background:linear-gradient(180deg,#aee3ff 0%,#d8f5e3 55%,#eefbeF 100%);
+    background-color:#d8f5e3;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:18px 14px 48px}
+  header.top{text-align:center;padding:14px 0 6px}
+  header.top .logo{font-size:52px;line-height:1}
+  header.top h1{font-size:clamp(26px,6vw,40px);font-weight:900;color:var(--green-dark);letter-spacing:.2px}
+  header.top p{color:var(--muted);font-weight:600;margin-top:6px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;margin-top:16px}
+  .hidden{display:none!important}
+  /* ---------- Start screen ---------- */
+  .scene{font-size:64px;text-align:center;letter-spacing:6px;padding:8px 0 2px}
+  .howto{background:var(--green-light);border-radius:14px;padding:14px 16px;line-height:1.75;font-size:15px}
+  .howto b{color:var(--green-dark)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row.center{justify-content:center}
+  label.pick{font-weight:700;color:var(--muted);font-size:14px}
+  select{font:inherit;font-weight:700;padding:10px 12px;border-radius:12px;border:2px solid #cfe8d8;background:#fff;color:var(--ink)}
+  button{font:inherit;cursor:pointer;border:none;border-radius:14px;font-weight:800;transition:transform .08s,box-shadow .15s,background .15s}
+  button:active{transform:scale(.97)}
+  .btn-main{background:var(--green);color:#fff;font-size:19px;padding:15px 30px;box-shadow:0 8px 20px rgba(29,158,87,.35);width:100%}
+  .btn-main:hover{background:var(--green-dark)}
+  .btn-ghost{background:#fff;color:var(--green-dark);border:2px solid var(--green);padding:11px 18px;font-size:15px}
+  .btn-ghost:hover{background:var(--green-light)}
+  .btn-small{padding:8px 14px;font-size:14px}
+  .btn-danger{background:#fff;color:var(--wrong);border:2px solid var(--wrong)}
+  .stat-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+  .chip{background:#fff;border:2px solid #d7efe0;color:var(--green-dark);border-radius:999px;padding:6px 14px;font-weight:800;font-size:14px}
+  /* ---------- Game screen ---------- */
+  .hud{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .hud .box{background:var(--green-light);border-radius:12px;padding:8px 14px;font-weight:900;color:var(--green-dark);min-width:96px;text-align:center}
+  .hud .box small{display:block;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.6px}
+  .timer-wrap{height:12px;background:#e3efe7;border-radius:999px;overflow:hidden;margin:14px 0 4px}
+  #timerBar{height:100%;background:var(--green);border-radius:999px;transition:width .2s linear}
+  #timerBar.low{background:var(--wrong)}
+  .tree-zone{text-align:center;padding:6px 0 0}
+  #tree{font-size:58px;line-height:1.15;transition:transform .3s}
+  #tree.grow{transform:scale(1.18)}
+  .progress-text{font-weight:700;color:var(--muted);font-size:14px}
+  #question{font-size:clamp(19px,4.6vw,24px);font-weight:800;line-height:1.45;margin:12px 0 16px}
+  .answers{display:grid;gap:10px}
+  .ans{
+    text-align:left;background:#f4faf6;border:2px solid #d7efe0;color:var(--ink);
+    padding:14px 16px;font-size:16px;font-weight:600;border-radius:14px;width:100%;
+    display:flex;gap:10px;align-items:flex-start;line-height:1.5;
+  }
+  .ans .key{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;margin-top:1px}
+  .ans:hover:not(:disabled){border-color:var(--green);background:var(--green-light)}
+  .ans:disabled{cursor:default;opacity:.92}
+  .ans.correct{background:#dff7e7;border-color:var(--green)}
+  .ans.correct .key{background:var(--green-dark)}
+  .ans.wrong{background:#fde8e8;border-color:var(--wrong)}
+  .ans.wrong .key{background:var(--wrong)}
+  .explain{margin-top:14px;border-radius:14px;padding:13px 15px;line-height:1.65;font-size:15px;display:none}
+  .explain.ok{display:block;background:#dff7e7;border:1.5px solid var(--green)}
+  .explain.bad{display:block;background:#fdecec;border:1.5px solid var(--wrong)}
+  #nextBtn{margin-top:14px;width:100%}
+  /* ---------- Result ---------- */
+  .result{text-align:center}
+  .result .big{font-size:72px}
+  .result h2{font-size:28px;font-weight:900;color:var(--green-dark);margin:6px 0}
+  .score-big{font-size:44px;font-weight:900;color:var(--green)}
+  .rank{display:inline-block;background:#fff6df;border:2px solid var(--gold);color:#8a5b00;font-weight:900;border-radius:999px;padding:8px 18px;margin:10px 0}
+  /* ---------- Editor ---------- */
+  .editor-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .qedit{border:2px solid #e0f0e6;border-radius:16px;padding:14px;margin-top:12px;background:#fbfefc}
+  .qedit textarea,.qedit input[type=text]{width:100%;font:inherit;padding:10px 12px;border:1.5px solid #cfe8d8;border-radius:10px;margin-top:6px;background:#fff}
+  .qedit label{font-size:13px;font-weight:800;color:var(--muted);display:block;margin-top:10px}
+  .qedit .opts{display:grid;gap:4px}
+  .qedit .opt-row{display:flex;gap:8px;align-items:center}
+  .qedit .opt-row input[type=text]{flex:1}
+  .qedit .opt-row input[type=radio]{width:20px;height:20px;accent-color:var(--green)}
+  .notice{background:#fff8e1;border:1.5px solid var(--gold);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.6;margin-top:12px}
+  footer{text-align:center;color:var(--muted);font-size:13px;margin-top:22px;line-height:1.7}
+  @media (max-width:520px){ .hud .box{min-width:82px;padding:7px 8px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">🌍</div>
+    <h1>CHIẾN BINH XANH</h1>
+    <p>Trò chơi trắc nghiệm Bảo vệ Môi trường — trả lời đúng, trồng cây, cứu hành tinh!</p>
+  </header>
+
+  <!-- ======= MÀN HÌNH BẮT ĐẦU ======= -->
+  <section id="screenStart" class="card">
+    <div class="scene">🌱 🌳 🦋 🌻 🐢</div>
+    <div class="howto">
+      🎮 <b>Cách chơi:</b> Mỗi câu trả lời đúng, bạn gieo thêm một mầm xanh cho Trái Đất và ghi điểm.<br>
+      ⏱️ Mỗi câu có <b>20 giây</b>. Trả lời càng nhanh, điểm thưởng càng cao.<br>
+      🌳 Trả lời đúng liên tiếp để cây lớn nhanh — trả lời sai, cây sẽ héo mất một lá!<br>
+      ⚙️ Bộ câu hỏi <b>đổi được</b>: bấm nút “Đổi câu hỏi” ở dưới để sửa, thêm, xóa câu hỏi theo ý bạn.
+    </div>
+    <div class="row center" style="margin-top:16px">
+      <label class="pick" for="selCount">Số câu mỗi lượt:</label>
+      <select id="selCount">
+        <option value="10">10 câu</option>
+        <option value="15">15 câu</option>
+        <option value="all">Tất cả câu hỏi</option>
+      </select>
+      <span class="chip" id="bankInfo">📚 Đang tải bộ câu hỏi…</span>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn-main" id="btnStart">▶️ BẮT ĐẦU CHƠI</button>
+    </div>
+    <div class="row center" style="margin-top:12px">
+      <button class="btn-ghost" id="btnOpenEditor">⚙️ Đổi câu hỏi</button>
+      <button class="btn-ghost" id="btnHowScore">🏆 Cách tính điểm</button>
+    </div>
+    <div id="scoreHelp" class="notice hidden">Đúng 1 câu: <b>+100 điểm</b>. Thưởng tốc độ: mỗi giây còn lại <b>+5 điểm</b>. Đúng 3 câu liên tiếp trở lên: cộng thêm <b>+20 điểm</b> mỗi câu. Hết giờ hoặc trả lời sai: không được điểm câu đó.</div>
+  </section>
+
+  <!-- ======= MÀN HÌNH CHƠI ======= -->
+  <section id="screenGame" class="card hidden">
+    <div class="hud">
+      <div class="box"><small>CÂU HỎI</small><span id="hudQ">1/10</span></div>
+      <div class="box"><small>ĐIỂM</small><span id="hudScore">0</span></div>
+      <div class="box"><small>ĐÚNG LIÊN TIẾP</small><span id="hudStreak">🔥 0</span></div>
+      <div class="box"><small>THỜI GIAN</small><span id="hudTime">20s</span></div>
+    </div>
+    <div class="timer-wrap"><div id="timerBar" style="width:100%"></div></div>
+    <div class="tree-zone">
+      <div id="tree">🌱</div>
+      <div class="progress-text" id="treeText">Mầm xanh vừa nhú — hãy trả lời đúng để cây lớn lên!</div>
+    </div>
+    <div id="question">Câu hỏi…</div>
+    <div class="answers" id="answers"></div>
+    <div class="explain" id="explain"></div>
+    <button class="btn-main hidden" id="nextBtn">Câu tiếp theo ➡️</button>
+    <div class="row center" style="margin-top:14px">
+      <button class="btn-ghost btn-small" id="btnQuit">⏹️ Dừng chơi</button>
+    </div>
+  </section>
+
+  <!-- ======= MÀN HÌNH KẾT QUẢ ======= -->
+  <section id="screenResult" class="card hidden">
+    <div class="result">
+      <div class="big" id="resultEmoji">🌳</div>
+      <h2 id="resultTitle">Hoàn thành!</h2>
+      <div class="score-big"><span id="finalScore">0</span> điểm</div>
+      <div><span class="rank" id="finalRank">🌱 Hạt Mầm Xanh</span></div>
+      <p id="finalDetail" style="line-height:1.7;color:var(--muted);font-weight:600"></p>
+      <p id="finalMsg" style="line-height:1.7;margin-top:8px"></p>
+      <div style="margin-top:16px" class="row center">
+        <button class="btn-main" id="btnReplay" style="width:auto">🔄 Chơi lại (xáo trộn câu hỏi)</button>
+      </div>
+      <div class="row center" style="margin-top:10px">
+        <button class="btn-ghost" id="btnHome">🏠 Về màn hình chính</button>
+        <button class="btn-ghost" id="btnEditor2">⚙️ Đổi câu hỏi</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= MÀN HÌNH ĐỔI CÂU HỎI ======= -->
+  <section id="screenEditor" class="card hidden">
+    <div class="editor-head">
+      <h2 style="color:var(--green-dark)">⚙️ Đổi câu hỏi</h2>
+      <button class="btn-ghost btn-small" id="btnCloseEditor">✖️ Đóng</button>
+    </div>
+    <div class="notice">
+      Sửa trực tiếp nội dung bên dưới rồi bấm <b>“Lưu bộ câu hỏi”</b>. Bộ câu hỏi của bạn được lưu ngay trên trình duyệt này (lần sau mở lại vẫn còn).
+      Muốn dùng trên máy khác: bấm <b>Xuất file JSON</b>, rồi ở máy kia bấm <b>Nhập file JSON</b>.
+      Ô tròn ● bên cạnh đáp án là đáp án đúng.
+    </div>
+    <div id="editorList"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn-ghost" id="btnAddQ">➕ Thêm câu hỏi mới</button>
+      <button class="btn-ghost" id="btnResetQ">↩️ Khôi phục câu hỏi gốc</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn-main" id="btnSaveQ" style="width:auto;flex:1">💾 Lưu bộ câu hỏi</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn-ghost btn-small" id="btnExportQ">⬇️ Xuất file JSON</button>
+      <button class="btn-ghost btn-small" id="btnImportQ">⬆️ Nhập file JSON</button>
+      <input type="file" id="fileImport" accept=".json,application/json" class="hidden">
+    </div>
+    <p id="editorMsg" style="margin-top:10px;font-weight:700;color:var(--green-dark)"></p>
+  </section>
+
+  <footer>
+    🌍 Mỗi hành động nhỏ — phân loại rác, tiết kiệm điện nước, trồng một cây xanh — đều giúp Trái Đất khỏe hơn.<br>
+    Game “Chiến Binh Xanh” • Chơi trực tiếp trên trình duyệt, không cần cài đặt.
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================
+   BỘ CÂU HỎI GỐC — muốn đổi nhanh trên GitHub thì sửa ngay tại đây.
+   Mỗi câu: q = câu hỏi, options = 4 đáp án, answer = vị trí đáp án đúng
+   (đếm từ 0), explain = giải thích sau khi trả lời.
+   Trong game cũng có nút "Đổi câu hỏi" để sửa mà không cần đụng vào code.
+===================================================================== */
+const DEFAULT_QUESTIONS = [
+  { q:"Ngày Môi trường Thế giới được tổ chức vào ngày nào hằng năm?",
+    options:["Ngày 5 tháng 6","Ngày 1 tháng 1","Ngày 30 tháng 4","Ngày 22 tháng 12"], answer:0,
+    explain:"Ngày 5/6 là Ngày Môi trường Thế giới do Liên Hợp Quốc phát động, nhắc mọi người cùng hành động vì môi trường." },
+  { q:"Một chiếc túi ni lông dùng vài phút nhưng mất khoảng bao lâu để phân hủy hoàn toàn trong tự nhiên?",
+    options:["Khoảng 1 tuần","Khoảng 1 tháng","Khoảng 1 năm","Từ 500 đến 1.000 năm"], answer:3,
+    explain:"Túi ni lông cực kỳ khó phân hủy, có thể tồn tại 500–1.000 năm. Hãy mang túi vải khi đi chợ nhé!" },
+  { q:"Ba chữ R trong bảo vệ môi trường (3R) có nghĩa là gì?",
+    options:["Read – Run – Rest (Đọc – Chạy – Nghỉ)","Reduce – Reuse – Recycle (Giảm dùng – Tái sử dụng – Tái chế)","Red – Round – River (Đỏ – Tròn – Sông)","Rain – Road – Rock (Mưa – Đường – Đá)"], answer:1,
+    explain:"3R = Reduce (giảm dùng), Reuse (tái sử dụng), Recycle (tái chế) — nguyên tắc vàng để giảm rác thải." },
+  { q:"Cây xanh giúp làm sạch không khí bằng cách nào?",
+    options:["Hấp thụ khí CO₂ và nhả ra khí ôxy","Làm cho trời mưa nhiều hơn","Che hết ánh nắng mặt trời","Đuổi hết các loài chim"], answer:0,
+    explain:"Khi quang hợp, cây hấp thụ CO₂ — khí gây biến đổi khí hậu — và nhả ra ôxy cho chúng ta hít thở." },
+  { q:"Pin cũ, pin hỏng nên được xử lý như thế nào?",
+    options:["Vứt chung vào thùng rác sinh hoạt","Chôn xuống vườn","Mang đến điểm thu gom rác thải nguy hại / hộp thu hồi pin","Ném xuống sông cho trôi đi"], answer:2,
+    explain:"Pin chứa chì, thủy ngân, cadmi rất độc. Vứt bừa bãi sẽ ngấm vào đất và nước. Hãy mang pin cũ đến điểm thu gom riêng." },
+  { q:"Hành động nào sau đây giúp tiết kiệm điện nhất?",
+    options:["Bật điều hòa 16°C cả ngày","Tắt điện, rút phích cắm khi không sử dụng","Mở tủ lạnh liên tục cho mát phòng","Bật tất cả đèn trong nhà"], answer:1,
+    explain:"Tắt và rút phích cắm khi không dùng giúp giảm điện lãng phí — nhiều thiết bị vẫn 'ăn điện ngầm' khi cắm chờ." },
+  { q:"Rác hữu cơ gồm những loại nào?",
+    options:["Vỏ trái cây, rau thừa, lá cây","Chai nhựa, lon nhôm","Pin, bóng đèn hỏng","Túi ni lông, xốp"], answer:0,
+    explain:"Rác hữu cơ là rác từ thực phẩm và cây cối, phân hủy nhanh và có thể ủ thành phân bón cho cây." },
+  { q:"Vì sao không nên đốt rác nhựa và xốp ngoài trời?",
+    options:["Vì lửa không cháy được nhựa","Vì khói đốt nhựa sinh ra khí độc gây bệnh","Vì nhựa rất đắt tiền","Vì đốt rác làm trời tối đi"], answer:1,
+    explain:"Đốt nhựa, xốp sinh ra khí độc như dioxin, gây hại cho phổi và sức khỏe. Rác nhựa nên được thu gom, tái chế." },
+  { q:"Năng lượng nào sau đây là năng lượng tái tạo, sạch và không bao giờ cạn?",
+    options:["Than đá","Dầu mỏ","Năng lượng mặt trời","Khí đốt tự nhiên"], answer:2,
+    explain:"Năng lượng mặt trời, gió, nước là năng lượng tái tạo — sạch và vô tận, khác với than đá, dầu mỏ gây ô nhiễm." },
+  { q:"Khi đánh răng, khóa vòi nước lại giúp tiết kiệm được khoảng bao nhiêu nước mỗi phút?",
+    options:["Khoảng 0,1 lít","Khoảng 1 lít","Khoảng 6 lít","Không tiết kiệm được gì"], answer:2,
+    explain:"Để vòi chảy liên tục khi đánh răng có thể lãng phí khoảng 6 lít nước mỗi phút. Khóa vòi là thói quen rất đáng quý!" },
+  { q:"Rùa biển thường nhầm túi ni lông trôi trên biển với thứ gì và ăn phải?",
+    options:["Con sứa — thức ăn của rùa biển","Con cá nhỏ","Rong biển","San hô"], answer:0,
+    explain:"Túi ni lông trong nước trông giống con sứa. Rùa ăn phải sẽ bị tắc ruột và chết. Đừng xả rác ra biển nhé!" },
+  { q:"Loại bóng đèn nào tiết kiệm điện nhất trong các loại sau?",
+    options:["Bóng đèn sợi đốt","Bóng đèn huỳnh quang ống dài","Bóng đèn LED","Bóng đèn halogen"], answer:2,
+    explain:"Đèn LED tiết kiệm tới 75–80% điện so với đèn sợi đốt và dùng được lâu hơn nhiều lần." },
+  { q:"Rừng ngập mặn ở ven biển có vai trò quan trọng nào?",
+    options:["Chắn sóng, chống xói lở và là nhà của nhiều loài tôm cá","Làm nước biển mặn hơn","Để lấy gỗ xây nhà là chính","Không có vai trò gì"], answer:0,
+    explain:"Rừng ngập mặn như 'bức tường xanh' chắn sóng bão, giữ đất và là nơi sinh sống của nhiều loài thủy sản." },
+  { q:"Khí nào là nguyên nhân chính gây hiệu ứng nhà kính và biến đổi khí hậu?",
+    options:["Khí ôxy (O₂)","Khí CO₂ (cacbonic)","Khí nitơ (N₂)","Hơi nước sạch"], answer:1,
+    explain:"CO₂ từ đốt xăng, than, dầu giữ nhiệt trong khí quyển làm Trái Đất nóng lên — đó là biến đổi khí hậu." },
+  { q:"Việc làm nào giúp giảm rác thải nhựa dùng một lần hiệu quả?",
+    options:["Dùng bình nước cá nhân và túi vải thay đồ nhựa dùng một lần","Mua thêm nhiều túi ni lông dự trữ","Dùng ống hút nhựa cho mọi ly nước","Vứt ly nhựa ngay sau một lần uống"], answer:0,
+    explain:"Mang bình nước cá nhân, túi vải, hộp cơm riêng giúp cắt giảm rất nhiều nhựa dùng một lần mỗi ngày." },
+  { q:"Giấy đã qua sử dụng nên làm gì để bảo vệ rừng?",
+    options:["Đốt bỏ ngay","Thu gom để tái chế giấy","Vứt xuống cống","Chôn xuống đất"], answer:1,
+    explain:"Tái chế 1 tấn giấy giúp cứu khoảng 17 cây xanh và tiết kiệm nhiều nước, điện so với làm giấy mới." },
+  { q:"Khi in tài liệu, cách nào giúp tiết kiệm giấy?",
+    options:["Chỉ in một mặt","In hai mặt và chỉ in khi thật cần thiết","In thật nhiều bản dự phòng","In màu cho mọi trang"], answer:1,
+    explain:"In hai mặt giúp giảm một nửa lượng giấy. Trước khi in, hãy hỏi: 'Mình có thật sự cần bản giấy này không?'" },
+  { q:"Đi lại bằng phương tiện nào thân thiện với môi trường nhất cho quãng đường ngắn?",
+    options:["Đi xe máy một mình","Đi ô tô riêng","Đi xe đạp hoặc đi bộ","Đi taxi"], answer:2,
+    explain:"Xe đạp và đi bộ không xả khói bụi, lại tốt cho sức khỏe. Quãng ngắn, hãy ưu tiên 'đôi chân xanh'!" },
+  { q:"Nước thải sinh hoạt chưa qua xử lý đổ thẳng ra sông sẽ gây hậu quả gì?",
+    options:["Làm sông sạch hơn","Ô nhiễm nguồn nước, cá tôm chết, người dân thiếu nước sạch","Làm cá lớn nhanh hơn","Không ảnh hưởng gì"], answer:1,
+    explain:"Nước thải bẩn làm sông hồ ô nhiễm, sinh vật chết và con người mất nguồn nước sạch để sinh hoạt." },
+  { q:"Một hành động đơn giản mà học sinh có thể làm mỗi ngày để bảo vệ môi trường là gì?",
+    options:["Xả rác đúng nơi quy định và phân loại rác tại nguồn","Mang nhiều túi ni lông về nhà","Để nước chảy tràn khi rửa tay","Bẻ cành cây trong sân trường"], answer:0,
+    explain:"Bỏ rác đúng chỗ, phân loại rác, tắt điện nước khi không dùng — việc nhỏ mỗi ngày tạo thay đổi lớn!" }
+];
+
+/* ================== LƯU / TẢI BỘ CÂU HỎI ================== */
+const STORAGE_KEY = "chien-binh-xanh-questions-v1";
+let questionBank = loadBank();
+function loadBank(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const arr = JSON.parse(raw);
+      if(Array.isArray(arr) && arr.length) return sanitize(arr);
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+}
+function sanitize(arr){
+  return arr.filter(q => q && typeof q.q === "string" && Array.isArray(q.options) && q.options.length >= 2)
+            .map(q => ({ q:q.q, options:q.options.slice(0,6).map(String),
+                         answer: Math.min(Math.max(0, q.answer|0), q.options.length-1),
+                         explain: typeof q.explain === "string" ? q.explain : "" }));
+}
+function saveBank(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(questionBank)); }catch(e){}
+}
+
+/* ================== ÂM THANH NHẸ (WebAudio, không cần file) ================== */
+let audioCtx = null;
+function beep(freq, dur, type){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type || "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
+  }catch(e){}
+}
+const sndOk   = () => { beep(660, .12); setTimeout(()=>beep(880,.16), 110); };
+const sndBad  = () => beep(180, .28, "sawtooth");
+const sndWin  = () => { [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.18), i*130)); };
+
+/* ================== TRẠNG THÁI GAME ================== */
+const $ = id => document.getElementById(id);
+const screens = { start:$("screenStart"), game:$("screenGame"), result:$("screenResult"), editor:$("screenEditor") };
+function show(name){
+  Object.values(screens).forEach(s => s.classList.add("hidden"));
+  screens[name].classList.remove("hidden");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+let game = null, timerId = null, timeLeft = 0;
+const TIME_PER_Q = 20;
+
+function shuffle(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function updateBankInfo(){ $("bankInfo").textContent = "📚 Bộ câu hỏi hiện có: " + questionBank.length + " câu"; }
+
+function startGame(){
+  const sel = $("selCount").value;
+  let pool = shuffle(questionBank);
+  if(sel !== "all") pool = pool.slice(0, Math.min(parseInt(sel,10), pool.length));
+  game = { list: pool, idx: 0, score: 0, correct: 0, streak: 0, bestStreak: 0, answered:false };
+  show("game");
+  nextQuestion();
+}
+
+function treeStage(){
+  if(!game || !game.list.length) return ["🌱","Mầm xanh vừa nhú — hãy trả lời đúng để cây lớn lên!"];
+  const r = game.correct / game.list.length;
+  if(r >= .85) return ["🌳","Cây xanh sum suê! Hành tinh đang mỉm cười với bạn!"];
+  if(r >= .6)  return ["🌲","Cây đã cao lớn! Cố thêm chút nữa nào!"];
+  if(r >= .35) return ["🌿","Cây đang vươn lá! Tốt lắm, tiếp tục nhé!"];
+  if(r > 0)    return ["🌱","Mầm đã nảy! Trả lời đúng tiếp để cây lớn nhanh!"];
+  return ["🌰","Hạt giống đang chờ — trả lời đúng để hạt nảy mầm!"];
+}
+
+function nextQuestion(){
+  clearInterval(timerId);
+  if(!game || game.idx >= game.list.length){ return finishGame(); }
+  game.answered = false;
+  const item = game.list[game.idx];
+  $("hudQ").textContent = (game.idx+1) + "/" + game.list.length;
+  $("hudScore").textContent = game.score;
+  $("hudStreak").textContent = "🔥 " + game.streak;
+  const [emoji, txt] = treeStage();
+  $("tree").textContent = emoji; $("treeText").textContent = txt;
+  $("question").textContent = "Câu " + (game.idx+1) + ": " + item.q;
+  $("explain").className = "explain"; $("explain").textContent = "";
+  $("nextBtn").classList.add("hidden");
+
+  // Xáo trộn thứ tự đáp án, nhớ vị trí đáp án đúng sau khi xáo
+  const order = shuffle(item.options.map((_,i)=>i));
+  const box = $("answers"); box.innerHTML = "";
+  const keys = ["A","B","C","D","E","F"];
+  order.forEach((optIdx, pos) => {
+    const b = document.createElement("button");
+    b.className = "ans";
+    b.innerHTML = '<span class="key"></span><span></span>';
+    b.querySelector(".key").textContent = keys[pos];
+    b.querySelector("span:last-child").textContent = item.options[optIdx];
+    b.onclick = () => answer(optIdx === item.answer, b);
+    box.appendChild(b);
+  });
+
+  // Đếm ngược
+  timeLeft = TIME_PER_Q;
+  renderTimer();
+  timerId = setInterval(() => {
+    timeLeft -= 0.2;
+    if(timeLeft <= 0){ timeLeft = 0; renderTimer(); clearInterval(timerId); timeOut(); }
+    else renderTimer();
+  }, 200);
+}
+function renderTimer(){
+  $("hudTime").textContent = Math.ceil(timeLeft) + "s";
+  const bar = $("timerBar");
+  bar.style.width = (timeLeft / TIME_PER_Q * 100) + "%";
+  bar.classList.toggle("low", timeLeft <= 5);
+}
+function lockAnswers(correctBtn){
+  document.querySelectorAll(".ans").forEach(b => {
+    b.disabled = true;
+    if(b === correctBtn) b.classList.add("correct");
+  });
+  // Tô xanh đáp án đúng dù người chơi chọn sai
+  if(!correctBtn){
+    const item = game.list[game.idx];
+    document.querySelectorAll(".ans").forEach(b => {
+      if(b.querySelector("span:last-child").textContent === item.options[item.answer]) b.classList.add("correct");
+    });
+  }
+}
+function showExplain(ok, msg){
+  const ex = $("explain");
+  ex.className = "explain " + (ok ? "ok" : "bad");
+  ex.textContent = msg;
+  const nb = $("nextBtn");
+  nb.textContent = (game.idx + 1 >= game.list.length) ? "Xem kết quả 🏁" : "Câu tiếp theo ➡️";
+  nb.classList.remove("hidden");
+}
+function answer(isCorrect, btn){
+  if(game.answered) return;
+  game.answered = true;
+  clearInterval(timerId);
+  const item = game.list[game.idx];
+  if(isCorrect){
+    game.correct++; game.streak++; game.bestStreak = Math.max(game.bestStreak, game.streak);
+    let pts = 100 + Math.ceil(timeLeft) * 5 + (game.streak >= 3 ? 20 : 0);
+    game.score += pts;
+    sndOk();
+    lockAnswers(btn);
+    showExplain(true, "✅ Chính xác! +" + pts + " điểm. " + (item.explain || ""));
+    $("tree").classList.add("grow"); setTimeout(()=>$("tree").classList.remove("grow"), 350);
+  } else {
+    game.streak = 0; sndBad();
+    btn.classList.add("wrong");
+    lockAnswers(null);
+    showExplain(false, "❌ Chưa đúng rồi. Đáp án đúng là: “" + item.options[item.answer] + "”. " + (item.explain || ""));
+  }
+  $("hudScore").textContent = game.score;
+  $("hudStreak").textContent = "🔥 " + game.streak;
+  const [emoji, txt] = treeStage();
+  $("tree").textContent = emoji; $("treeText").textContent = txt;
+}
+function timeOut(){
+  if(game.answered) return;
+  game.answered = true; game.streak = 0; sndBad();
+  const item = game.list[game.idx];
+  lockAnswers(null);
+  showExplain(false, "⏰ Hết giờ! Đáp án đúng là: “" + item.options[item.answer] + "”. " + (item.explain || ""));
+  $("hudStreak").textContent = "🔥 0";
+}
+function finishGame(){
+  clearInterval(timerId);
+  const total = game.list.length, c = game.correct, r = total ? c/total : 0;
+  let emoji, rank, msg;
+  if(r >= .9){ emoji="🏆"; rank="🌍 Đại Sứ Hành Tinh Xanh"; msg="Xuất sắc! Bạn là tấm gương bảo vệ môi trường. Hãy lan tỏa thói quen xanh cho mọi người quanh bạn nhé!"; }
+  else if(r >= .7){ emoji="🌳"; rank="🌳 Chiến Binh Xanh"; msg="Rất tốt! Cây của bạn đã sum suê. Chỉ cần để ý thêm vài thói quen nhỏ nữa là hoàn hảo."; }
+  else if(r >= .45){ emoji="🌿"; rank="🌿 Mầm Xanh Đang Lớn"; msg="Khởi đầu tốt! Ôn lại phần giải thích ở các câu sai rồi chơi lại, cây sẽ cao hơn nữa."; }
+  else { emoji="🌱"; rank="🌱 Hạt Mầm Xanh"; msg="Đừng nản! Mỗi chuyên gia môi trường đều bắt đầu từ một hạt mầm. Chơi lại một lượt nữa nhé!"; }
+  $("resultEmoji").textContent = emoji;
+  $("resultTitle").textContent = "Hoàn thành hành trình!";
+  $("finalScore").textContent = game.score;
+  $("finalRank").textContent = rank;
+  $("finalDetail").textContent = "Bạn trả lời đúng " + c + "/" + total + " câu • Chuỗi đúng dài nhất: " + game.bestStreak + " câu";
+  $("finalMsg").textContent = msg;
+  sndWin();
+  show("result");
+}
+
+/* ================== TRÌNH SỬA CÂU HỎI ================== */
+function renderEditor(){
+  const list = $("editorList"); list.innerHTML = "";
+  questionBank.forEach((q, i) => {
+    const div = document.createElement("div");
+    div.className = "qedit";
+    div.innerHTML =
+      '<div class="row" style="justify-content:space-between"><b>Câu ' + (i+1) + '</b>' +
+      '<button type="button" class="btn-danger btn-small" data-del="' + i + '">🗑️ Xóa câu này</button></div>' +
+      '<label>Nội dung câu hỏi</label><textarea rows="2" data-f="q" data-i="' + i + '"></textarea>' +
+      '<label>Các đáp án (chọn ô tròn = đáp án đúng)</label><div class="opts"></div>' +
+      '<label>Giải thích (hiện sau khi trả lời)</label><input type="text" data-f="explain" data-i="' + i + '">';
+    div.querySelector('[data-f="q"]').value = q.q;
+    div.querySelector('[data-f="explain"]').value = q.explain || "";
+    const opts = div.querySelector(".opts");
+    q.options.forEach((op, j) => {
+      const row = document.createElement("div");
+      row.className = "opt-row";
+      row.innerHTML = '<input type="radio" name="correct-' + i + '" ' + (q.answer === j ? "checked" : "") + ' data-f="answer" data-i="' + i + '" data-j="' + j + '">' +
+                      '<input type="text" data-f="opt" data-i="' + i + '" data-j="' + j + '">';
+      row.querySelector('[data-f="opt"]').value = op;
+      opts.appendChild(row);
+    });
+    div.querySelector("[data-del]").onclick = () => {
+      if(questionBank.length <= 1){ $("editorMsg").textContent = "⚠️ Phải giữ lại ít nhất 1 câu hỏi."; return; }
+      collectEditor();
+      questionBank.splice(i, 1);
+      renderEditor();
+      $("editorMsg").textContent = "Đã xóa câu " + (i+1) + ". Nhớ bấm Lưu nhé!";
+    };
+    list.appendChild(div);
+  });
+}
+function collectEditor(){
+  document.querySelectorAll("#editorList [data-f]").forEach(el => {
+    const i = +el.dataset.i, f = el.dataset.f;
+    if(!questionBank[i]) return;
+    if(f === "q") questionBank[i].q = el.value;
+    else if(f === "explain") questionBank[i].explain = el.value;
+    else if(f === "opt") questionBank[i].options[+el.dataset.j] = el.value;
+    else if(f === "answer" && el.checked) questionBank[i].answer = +el.dataset.j;
+  });
+}
+function openEditor(){ renderEditor(); $("editorMsg").textContent = ""; show("editor"); }
+
+/* ================== SỰ KIỆN ================== */
+$("btnStart").onclick = startGame;
+$("btnReplay").onclick = startGame;
+$("nextBtn").onclick = () => { game.idx++; nextQuestion(); };
+$("btnQuit").onclick = () => { clearInterval(timerId); show("start"); };
+$("btnHome").onclick = () => show("start");
+$("btnHowScore").onclick = () => $("scoreHelp").classList.toggle("hidden");
+$("btnOpenEditor").onclick = openEditor;
+$("btnEditor2").onclick = openEditor;
+$("btnCloseEditor").onclick = () => { updateBankInfo(); show("start"); };
+$("btnAddQ").onclick = () => {
+  collectEditor();
+  questionBank.push({ q:"Câu hỏi mới về môi trường?", options:["Đáp án A","Đáp án B","Đáp án C","Đáp án D"], answer:0, explain:"" });
+  renderEditor();
+  window.scrollTo({ top: document.body.scrollHeight, behavior:"smooth" });
+};
+$("btnSaveQ").onclick = () => {
+  collectEditor();
+  const cleaned = sanitize(questionBank);
+  if(!cleaned.length){ $("editorMsg").textContent = "⚠️ Chưa có câu hỏi hợp lệ để lưu."; return; }
+  questionBank = cleaned; saveBank(); updateBankInfo();
+  $("editorMsg").textContent = "✅ Đã lưu " + questionBank.length + " câu hỏi. Bấm Đóng rồi Bắt đầu chơi để dùng bộ mới!";
+};
+$("btnResetQ").onclick = () => {
+  if(!confirm("Khôi phục về 20 câu hỏi gốc? Bộ câu hỏi bạn đã sửa sẽ bị thay thế.")) return;
+  questionBank = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+  saveBank(); renderEditor(); updateBankInfo();
+  $("editorMsg").textContent = "↩️ Đã khôi phục bộ câu hỏi gốc.";
+};
+$("btnExportQ").onclick = () => {
+  collectEditor();
+  const blob = new Blob([JSON.stringify(questionBank, null, 2)], { type:"application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "bo-cau-hoi-bao-ve-moi-truong.json"; a.click();
+  URL.revokeObjectURL(a.href);
+};
+$("btnImportQ").onclick = () => $("fileImport").click();
+$("fileImport").onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{
+      const arr = sanitize(JSON.parse(rd.result));
+      if(!arr.length) throw new Error("empty");
+      questionBank = arr; saveBank(); renderEditor(); updateBankInfo();
+      $("editorMsg").textContent = "✅ Đã nhập " + arr.length + " câu hỏi từ file.";
+    }catch(err){ $("editorMsg").textContent = "⚠️ File không hợp lệ. File cần là JSON danh sách câu hỏi đã xuất từ game này."; }
+  };
+  rd.readAsText(f);
+  e.target.value = "";
+};
+
+updateBankInfo();
+show("start");
+</script>
+</body>
+</html>
